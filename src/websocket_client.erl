@@ -53,9 +53,9 @@ cast(Client, Frame) ->
                             no_return().
 ws_client_init(Handler, Protocol, Host, Port, Path, Args, Opts) ->
     Transport = case Protocol of
-                    wss ->
+                    "wss" ->
                         ssl;
-                    ws ->
+                    "ws" ->
                         gen_tcp
                 end,
     SockReply = case Transport of
