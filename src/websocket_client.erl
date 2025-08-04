@@ -27,12 +27,16 @@ start_link(URL, Handler, HandlerArgs, AsyncStart) when is_boolean(AsyncStart) ->
 start_link(URL, Handler, HandlerArgs, Opts) when is_binary(URL) ->
 	start_link(erlang:binary_to_list(URL), Handler, HandlerArgs, Opts);
 start_link(URL, Handler, HandlerArgs, Opts) when is_list(Opts) ->
-    case http_uri:parse(URL, [{scheme_defaults, [{ws,80},{wss,443}]}]) of
-        {ok, {Protocol, _, Host, Port, Path, Query}} ->
+    case uri_string:parse(URL) of
+        Uri_map when is_map(Uri_map) ->
+            Host = maps:get(host, Uri_map, "localhost"),
+            Path = maps:get(path, Uri_map, ""),
+            Port = maps:get(port, Uri_map, "80"),
+            Scheme = maps:get(scheme, Uri_map, "ws"),
+            Query = maps:get(query, Uri_map, ""),
             proc_lib:start_link(?MODULE, ws_client_init,
-                                [Handler, Protocol, Host, Port, Path ++ Query, HandlerArgs, Opts]);
-        {error, _} = Error ->
-            Error
+                               [Handler, Scheme, Host, Port, Path ++ Query, HandlerArgs, Opts]);
+        {error, _, _} = Error -> Error
     end.
 
 %% Send a frame asynchronously
@@ -235,7 +239,7 @@ error_info(Handler, Reason, State) ->
         "** for the reason ~p~n"
         "** Handler state was ~p~n"
         "** Stacktrace: ~p~n~n",
-        [Handler, Reason, State, erlang:get_stacktrace()]).
+        [Handler, Reason, State, []]).
 
 %% @doc Key sent in initial handshake
 -spec generate_ws_key() ->
