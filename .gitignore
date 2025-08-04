@@ -7,3 +7,5 @@ log/*
 .ct_results
 test-deps
 /.project
+/_build/
+/rebar.lock
